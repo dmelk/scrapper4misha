@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+    nest:
+        build: .docker/nest
+        command: /run.sh
+        volumes:
+            - ./nest/:/var/www/
+            - ./.docker/nest/run.sh:/run.sh
+
+    nginx:
+        image: nginx:1.15.12
+        command: nginx
+        depends_on:
+            - nest
+        links:
+            - nest
+        volumes:
+            - ./nest/public:/var/www/public
+            - ./.docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+        ports:
+            - "80:80"

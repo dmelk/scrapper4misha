@@ -1,0 +1,15 @@
+export interface ProductInfo {
+    link: string,
+    currency: string,
+    available: string,
+    name: string,
+    manufacturer: string,
+    sku: string,
+    price: number,
+    description: string,
+    descriptionHtml: string,
+    unitName: string,
+    discount: string,
+    variants: any[],
+    photos: string[],
+}

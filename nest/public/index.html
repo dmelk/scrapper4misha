@@ -33,7 +33,7 @@
                     <td class="mdc-data-table__cell" id="dinamotoFinishedVal"></td>
                     <td class="mdc-data-table__cell">
                         <div class="mdc-touch-target-wrapper">
-                            <button class="mdc-button mdc-button--touch" id="dinamotoBtn" disabled onclick="startDinamoto()">
+                            <button class="mdc-button mdc-button--touch" id="dinamotoBtn" disabled onclick="start('dinamoto')">
                                 <span class="mdc-button__ripple"></span>
                                 <span class="mdc-button__label">Start scrapping</span>
                                 <span class="mdc-button__touch"></span>
@@ -41,6 +41,29 @@
                         </div>
                         <div class="mdc-touch-target-wrapper hidden" id="dinamotoDownloadWrapper">
                             <a class="mdc-button mdc-button--touch" id="dinamotoDownload">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">Download xls</span>
+                                <span class="mdc-button__touch"></span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="mdc-data-table__row">
+                    <th class="mdc-data-table__cell" scope="row">Moto Crazy Town</th>
+                    <td class="mdc-data-table__cell" id="motocrazytownStatus"></td>
+                    <td class="mdc-data-table__cell" id="motocrazytownStartedVal"></td>
+                    <td class="mdc-data-table__cell mdc-data-table__cell--numeric" id="motocrazytownProcessedVal"></td>
+                    <td class="mdc-data-table__cell" id="motocrazytownFinishedVal"></td>
+                    <td class="mdc-data-table__cell">
+                        <div class="mdc-touch-target-wrapper">
+                            <button class="mdc-button mdc-button--touch" id="motocrazytownBtn" disabled onclick="start('motocrazytown')">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">Start scrapping</span>
+                                <span class="mdc-button__touch"></span>
+                            </button>
+                        </div>
+                        <div class="mdc-touch-target-wrapper hidden" id="motocrazytownDownloadWrapper">
+                            <a class="mdc-button mdc-button--touch" id="motocrazytownDownload">
                                 <span class="mdc-button__ripple"></span>
                                 <span class="mdc-button__label">Download xls</span>
                                 <span class="mdc-button__touch"></span>

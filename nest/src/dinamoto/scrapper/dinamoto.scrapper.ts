@@ -7,6 +7,7 @@ import {ScrapperStatus} from '../../log/type/scrapper.status';
 import got from 'got';
 import {ProductInfo} from '../../product/type/product.info';
 import cheerioModule from 'cheerio';
+import {CombinationGenerator} from '../../product/generator/combination.generator';
 
 @Injectable()
 export class DinamotoScrapper {
@@ -25,6 +26,7 @@ export class DinamotoScrapper {
     constructor(
         private readonly excelGenerator: ExcelGenerator,
         private readonly logStore: LogStore,
+        private readonly combinationGenerator: CombinationGenerator,
     ) {
         this.productAttributes = new Map<string, ProductAttributeInterface>();
         this.productAttributes.set(
@@ -105,7 +107,7 @@ export class DinamotoScrapper {
 
         await this.logStore.storeLog(
             {
-                processed: productRow,
+                processed: productRow - 2,
             },
             DinamotoScrapper.BASE_NAME
         );
@@ -123,13 +125,13 @@ export class DinamotoScrapper {
             available: '+',
             name: '',
             manufacturer: '',
-            sku: '',
-            price: 0,
+            skus: [],
+            prices: [],
             description: '',
             descriptionHtml: '',
             unitName: 'шт.',
             discount: '',
-            variants: [],
+            combinations: [],
             photos: [],
         };
 
@@ -145,10 +147,13 @@ export class DinamotoScrapper {
         }
 
         const prices = $('meta[property="price"]');
+        let productPrice = 0;
         if (prices) {
-            productInfo.price = parseFloat(prices[0].attribs.content);
+            productPrice = parseFloat(prices[0].attribs.content);
         }
 
+        const variants = [];
+        let productSku = '';
         $('div.catalog-item-info-inside > div').each(
             (i, div) => {
                 if (i === 0) {
@@ -158,7 +163,7 @@ export class DinamotoScrapper {
                 }
                 if (i === 1) {
                     // vendorCode
-                    productInfo.sku = $('p', div).html();
+                    productSku = $('p', div).html();
                     return;
                 }
                 const variant = {
@@ -178,18 +183,24 @@ export class DinamotoScrapper {
                     }
                 );
                 if (variant.values.length !== 0) {
-                    productInfo.variants.push(variant);
+                    variants.push(variant);
                 }
             }
         )
 
-        if (productInfo.variants.length === 0) {
-            productInfo.variants.push(
+        if (variants.length === 0) {
+            variants.push(
                 {
                     name: '',
                     values: [''],
                 }
             );
+        }
+
+        productInfo.combinations = this.combinationGenerator.build([], variants);
+        for (let i = 0; i < productInfo.combinations.length; i++) {
+            productInfo.prices.push(productPrice);
+            productInfo.skus.push(productSku);
         }
 
         $('ul.catalog-photos > li > a').each(

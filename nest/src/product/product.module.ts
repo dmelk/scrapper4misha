@@ -5,11 +5,12 @@ import {ExcelGenerator} from './generator/excel.generator';
 @Module({
     imports: [],
     providers: [
-        CombinationGenerator,
         ExcelGenerator,
+        CombinationGenerator,
     ],
     exports: [
-        ExcelGenerator
+        ExcelGenerator,
+        CombinationGenerator,
     ]
 })
 export class ProductModule {

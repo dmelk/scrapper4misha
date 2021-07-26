@@ -3,17 +3,11 @@ import * as xl from 'excel4node';
 import {ProductAttributesMap} from '../type/product-attributes.map';
 import {ProductInfo} from '../type/product.info';
 import {ProductSheetConfig} from '../type/product-sheet.config';
-import {CombinationGenerator} from './combination.generator';
 
 @Injectable()
 export class ExcelGenerator {
 
     public static readonly WORKBOOK_PATH = '/var/www/public/api/xls/'
-
-    constructor(
-        private readonly combinationGenerator: CombinationGenerator,
-    ) {
-    }
 
     public createWorkbook() {
         return new xl.Workbook();
@@ -96,10 +90,8 @@ export class ExcelGenerator {
     public addProductToSheet(productInfo: ProductInfo, productAttributes: ProductAttributesMap, productRow: number, productSheet): number {
         let added = 0;
 
-        const combinationsList = this.combinationGenerator.build([], productInfo.variants);
-
-        combinationsList.forEach(
-            combination => {
+        productInfo.combinations.forEach(
+            (combination, idx) => {
                 combination.forEach(
                     variantInfo => {
                         if (variantInfo.name !== '' && productAttributes.has(variantInfo.name)) {
@@ -114,6 +106,12 @@ export class ExcelGenerator {
                         }
                     }
                 );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.PRICE)
+                    .number(
+                        productInfo.prices[idx]
+                    );
 
                 productSheet
                     .cell(productRow + added, ProductSheetConfig.NAME)
@@ -140,12 +138,6 @@ export class ExcelGenerator {
                     );
 
                 productSheet
-                    .cell(productRow + added, ProductSheetConfig.PRICE)
-                    .number(
-                        productInfo.price
-                    );
-
-                productSheet
                     .cell(productRow + added, ProductSheetConfig.DISCOUNT)
                     .string(
                         productInfo.discount
@@ -160,7 +152,7 @@ export class ExcelGenerator {
                 productSheet
                     .cell(productRow + added, ProductSheetConfig.SKU)
                     .string(
-                        productInfo.sku
+                        productInfo.skus[idx]
                     );
 
                 productSheet

@@ -12,12 +12,14 @@ export class CombinationGenerator {
             newList = [];
 
         currVariant.values.forEach(
-            variantValue => {
+            (variantValue, idx) => {
                 if (list.length === 0) {
                     newList.push([
                         {
                             name: currVariant.name,
-                            value: variantValue
+                            value: variantValue,
+                            optionId: (currVariant.optionId)? currVariant.optionId : '',
+                            variantName: (currVariant.names && currVariant.names[idx])? currVariant.names[idx] : '',
                         }
                     ]);
                 } else {
@@ -27,7 +29,9 @@ export class CombinationGenerator {
                             newElem.push(
                                 {
                                     name: currVariant.name,
-                                    value: variantValue
+                                    value: variantValue,
+                                    optionId: (currVariant.optionId)? currVariant.optionId : '',
+                                    variantName: (currVariant.names && currVariant.names[idx])? currVariant.names[idx] : '',
                                 }
                             );
                             newList.push(newElem);

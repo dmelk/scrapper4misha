@@ -59,6 +59,7 @@ let getStatus = (name) => {
 
 getStatus('dinamoto');
 getStatus('motocrazytown');
+getStatus('motodom');
 
 new mdc.dataTable.MDCDataTable(document.querySelector('.mdc-data-table'));
 new mdc.ripple.MDCRipple(document.querySelector('.mdc-button'));

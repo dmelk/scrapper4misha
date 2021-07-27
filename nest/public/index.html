@@ -71,6 +71,29 @@
                         </div>
                     </td>
                 </tr>
+                <tr class="mdc-data-table__row">
+                    <th class="mdc-data-table__cell" scope="row">Motodom</th>
+                    <td class="mdc-data-table__cell" id="motodomStatus"></td>
+                    <td class="mdc-data-table__cell" id="motodomStartedVal"></td>
+                    <td class="mdc-data-table__cell mdc-data-table__cell--numeric" id="motodomProcessedVal"></td>
+                    <td class="mdc-data-table__cell" id="motodomFinishedVal"></td>
+                    <td class="mdc-data-table__cell">
+                        <div class="mdc-touch-target-wrapper">
+                            <button class="mdc-button mdc-button--touch" id="motodomBtn" disabled onclick="start('motodom')">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">Start scrapping</span>
+                                <span class="mdc-button__touch"></span>
+                            </button>
+                        </div>
+                        <div class="mdc-touch-target-wrapper hidden" id="motodomDownloadWrapper">
+                            <a class="mdc-button mdc-button--touch" id="motodomDownload">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">Download xls</span>
+                                <span class="mdc-button__touch"></span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>

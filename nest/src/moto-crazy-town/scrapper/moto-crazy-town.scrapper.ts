@@ -70,13 +70,11 @@ export class MotoCrazyTownScrapper {
 
         let productRow = 2;
         for (let i = 0; i < catalogList.length; i++) {
-            // const catalogPage = catalogList[i];
-            const catalogPage = 'motobotinki-enduro-atv';
+            const catalogPage = catalogList[i];
             let maxPage = 0;
             for (let currPage = 0; currPage <= maxPage; currPage += MotoCrazyTownScrapper.PAGE_STEP) {
                 [maxPage, productRow] = await this.loadCatalogPage(currPage, maxPage, catalogPage, productRow, productSheet);
             }
-            break;
         }
 
         const xlsName = this.excelGenerator.saveWorkbook(workbook, MotoCrazyTownScrapper.BASE_NAME);

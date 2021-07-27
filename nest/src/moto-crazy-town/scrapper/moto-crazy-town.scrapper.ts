@@ -70,11 +70,13 @@ export class MotoCrazyTownScrapper {
 
         let productRow = 2;
         for (let i = 0; i < catalogList.length; i++) {
-            const catalogPage = catalogList[i];
+            // const catalogPage = catalogList[i];
+            const catalogPage = 'motobotinki-enduro-atv';
             let maxPage = 0;
             for (let currPage = 0; currPage <= maxPage; currPage += MotoCrazyTownScrapper.PAGE_STEP) {
                 [maxPage, productRow] = await this.loadCatalogPage(currPage, maxPage, catalogPage, productRow, productSheet);
             }
+            break;
         }
 
         const xlsName = this.excelGenerator.saveWorkbook(workbook, MotoCrazyTownScrapper.BASE_NAME);
@@ -100,10 +102,12 @@ export class MotoCrazyTownScrapper {
         // get maxPage
         let maxPage = oldMaxPage;
         if (page === 0) {
-            const pageLinks = $('a.page-link'),
-                lastPageHref = pageLinks[pageLinks.length-1].attribs.href;
+            const pageLinks = $('a.page-link');
+            if (pageLinks.length !== 0) {
+                const lastPageHref = pageLinks[pageLinks.length - 1].attribs.href;
 
-            maxPage = parseInt(MotoCrazyTownScrapper.getPage(lastPageHref));
+                maxPage = parseInt(MotoCrazyTownScrapper.getPage(lastPageHref));
+            }
         }
 
         const catalogHtml = cheerioModule.html($('div.jshop_list_category')),
@@ -145,18 +149,18 @@ export class MotoCrazyTownScrapper {
         };
 
         const names = $('h1.title');
-        if (names) {
+        if (names.length) {
             productInfo.name = names.html()
                 .replace(/(<span.*\/span>)/g, '');
         }
 
         const manufacturers = $('div.product-info > div.manufacturer_name > span');
-        if (manufacturers) {
+        if (manufacturers.length) {
             productInfo.manufacturer = manufacturers.html();
         }
 
         const descriptions = $('#description');
-        if (descriptions) {
+        if (descriptions.length) {
             productInfo.descriptionHtml = descriptions.html();
             productInfo.description = cheerioModule.text(descriptions);
         }
@@ -205,7 +209,7 @@ export class MotoCrazyTownScrapper {
             ]);
 
             const prices = $('#block_price');
-            if (prices) {
+            if (prices.length) {
                 productInfo.prices.push(
                     parseFloat(
                         cheerioModule.text(prices).replace(' ', '')
@@ -216,7 +220,7 @@ export class MotoCrazyTownScrapper {
             }
 
             const skus = $('#product_code');
-            if (skus) {
+            if (skus.length) {
                 productInfo.skus.push(
                     skus.html()
                 );

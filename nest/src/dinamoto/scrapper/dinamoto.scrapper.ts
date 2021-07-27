@@ -136,19 +136,19 @@ export class DinamotoScrapper {
         };
 
         const names = $('h1[property="name"]');
-        if (names) {
+        if (names.length) {
             productInfo.name = names.html();
         }
 
         const descriptions = $('span[property="description"]');
-        if (descriptions) {
+        if (descriptions.length) {
             productInfo.descriptionHtml = descriptions.html();
             productInfo.description = cheerioModule.text(descriptions);
         }
 
         const prices = $('meta[property="price"]');
         let productPrice = 0;
-        if (prices) {
+        if (prices.length) {
             productPrice = parseFloat(prices[0].attribs.content);
         }
 

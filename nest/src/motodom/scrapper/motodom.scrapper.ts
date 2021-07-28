@@ -182,6 +182,15 @@ export class MotodomScrapper {
 
         const options = $('div.product-option-radio');
         if (options.length === 0) {
+            const inStocks = $('font[data-ro="product_stock"]');
+            if (inStocks.length) {
+                const inStock = cheerioModule.text(inStocks).toLowerCase();
+                console.log(inStock);
+                if (inStock !== 'в наличии') {
+                    return 0;
+                }
+            }
+
             productInfo.combinations.push([
                 {
                     name: '',

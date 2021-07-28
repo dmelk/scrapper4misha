@@ -185,7 +185,6 @@ export class MotodomScrapper {
             const inStocks = $('font[data-ro="product_stock"]');
             if (inStocks.length) {
                 const inStock = cheerioModule.text(inStocks).toLowerCase();
-                console.log(inStock);
                 if (inStock !== 'в наличии') {
                     return 0;
                 }

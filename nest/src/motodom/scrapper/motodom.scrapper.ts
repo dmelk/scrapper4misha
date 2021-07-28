@@ -191,13 +191,16 @@ export class MotodomScrapper {
 
             const prices = $('div.product-price');
             if (prices.length) {
-                productInfo.prices.push(
-                    parseFloat(
-                        cheerioModule.text(prices).replace(' ', '')
-                    )
+                const priceValue = parseFloat(
+                    cheerioModule.text(prices).replace(' ', '')
                 );
+                if (priceValue === 0) {
+                    return 0;
+                }
+
+                productInfo.prices.push(priceValue);
             } else {
-                productInfo.prices.push(0);
+                return 0;
             }
 
             productInfo.skus.push(
@@ -294,7 +297,7 @@ export class MotodomScrapper {
 
                 const jsonResponse = JSON.parse(combinationResult.body);
                 if (jsonResponse.response) {
-                    if (jsonResponse.response.in_stock) {
+                    if (jsonResponse.response.in_stock || combination.length === 1) {
                         if (jsonResponse.response.price) {
                             productInfo.prices.push(
                                 parseFloat(jsonResponse.response.price)

@@ -53,7 +53,8 @@ let getStatus = (name) => {
             document.getElementById(`${name}Btn`).removeAttribute('disabled');
         }
     }
-    xhttp.open("GET", `api/${name}.json`);
+    const currDate = new Date();
+    xhttp.open("GET", `api/${name}.json?${currDate.getTime()}`);
     xhttp.send();
 }
 

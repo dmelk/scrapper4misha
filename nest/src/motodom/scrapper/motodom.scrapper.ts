@@ -51,7 +51,7 @@ export class MotodomScrapper {
         return matches[matches.length - 1];
     }
 
-    public async startScrapping() {
+    public async startScrapping(): Promise<string> {
         await this.logStore.storeLog(
             {
                 status: ScrapperStatus.IN_PROGRESS,
@@ -84,6 +84,8 @@ export class MotodomScrapper {
             },
             MotodomScrapper.BASE_NAME
         );
+
+        return xlsName;
     }
 
     private async loadCatalogPage(page: number, oldMaxPage: number, catalogPage: string, productRow: number, productSheet): Promise<[number, number]> {

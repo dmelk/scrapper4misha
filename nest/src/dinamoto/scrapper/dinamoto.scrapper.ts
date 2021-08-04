@@ -45,7 +45,7 @@ export class DinamotoScrapper {
         );
     }
 
-    public async startScrapping() {
+    public async startScrapping(): Promise<string> {
         await this.logStore.storeLog(
             {
                 status: ScrapperStatus.IN_PROGRESS,
@@ -75,6 +75,7 @@ export class DinamotoScrapper {
             DinamotoScrapper.BASE_NAME
         );
 
+        return xlsName;
     }
 
     private static getPage(href) {

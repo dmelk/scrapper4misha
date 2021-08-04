@@ -14,4 +14,6 @@ echo "APP Started: $(date +"%d.%m.%Y %r")"
 echo "#################################################################################################################"
 echo ""
 
+export NODE_OPTIONS="--max-old-space-size=2048"
+
 npm run start

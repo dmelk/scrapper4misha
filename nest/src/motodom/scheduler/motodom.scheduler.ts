@@ -19,11 +19,11 @@ export class MotodomScheduler {
 
         await this.mailSender.sendEmail(
             environment.emailsTo,
-            'Dinamoto finished',
+            'Motodom finished',
             `
             <p>
                 <a href="${environment.webPath}api/xls/${xlsName}">
-                    Dinamoto xls file is here.
+                    Motodom xls file is here.
                 </a>
             </p>
             `

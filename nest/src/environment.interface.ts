@@ -1,8 +1,6 @@
 interface GoogleConfigInterface {
-    clientId: string;
-    clientSecret: string;
-    refreshToken: string;
-    user: string;
+    username: string;
+    password: string;
 }
 
 export interface EnvironmentInterface {

@@ -94,34 +94,43 @@ export class MotodomScrapper {
             url = url.concat(MotodomScrapper.PAGE_URL, page.toString());
         }
 
-        const response = await got(url);
-        const $ = cheerioModule.load(response.body);
-
-        // get maxPage
         let maxPage = oldMaxPage;
-        if (page === 1) {
-            const pageLinks = $('ul.pagination > li > a');
-            if (pageLinks.length !== 0) {
-                const lastPageHref = pageLinks[pageLinks.length - 1].attribs.href;
 
-                maxPage = parseInt(MotodomScrapper.getPage(lastPageHref));
-                if (isNaN(maxPage)) {
-                    maxPage = oldMaxPage;
+        try {
+            const response = await got(url);
+            const $ = cheerioModule.load(response.body);
+
+            // get maxPage
+            if (page === 1) {
+                const pageLinks = $('ul.pagination > li > a');
+                if (pageLinks.length !== 0) {
+                    const lastPageHref = pageLinks[pageLinks.length - 1].attribs.href;
+
+                    maxPage = parseInt(MotodomScrapper.getPage(lastPageHref));
+                    if (isNaN(maxPage)) {
+                        maxPage = oldMaxPage;
+                    }
                 }
             }
-        }
 
-        const products = $('div.main-products > div > div > div.caption > div.name > a');
-        for (let i = 0; i < products.length; i++) {
-            productRow += await this.loadProduct(products[i].attribs.href, productRow, productSheet);
-        }
+            const products = $('div.main-products > div > div > div.caption > div.name > a');
+            for (let i = 0; i < products.length; i++) {
+                try {
+                    productRow += await this.loadProduct(products[i].attribs.href, productRow, productSheet);
+                } catch (e) {
+                    // do nothing, just ignore 404 error
+                }
+            }
 
-        await this.logStore.storeLog(
-            {
-                processed: productRow - 2,
-            },
-            MotodomScrapper.BASE_NAME
-        );
+            await this.logStore.storeLog(
+                {
+                    processed: productRow - 2,
+                },
+                MotodomScrapper.BASE_NAME
+            );
+        } catch (e) {
+            // do nothing, just ignore 404 error
+        }
 
         return [maxPage, productRow];
     }

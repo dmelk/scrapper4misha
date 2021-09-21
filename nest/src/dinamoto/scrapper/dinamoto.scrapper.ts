@@ -89,29 +89,38 @@ export class DinamotoScrapper {
             url = url.concat(DinamotoScrapper.PAGE_URL, page.toString());
         }
 
-        const response = await got(url);
-        const $ = cheerioModule.load(response.body);
-
         // get maxPage
         let maxPage = oldMaxPage;
-        if (page === 0) {
-            const pageLinks = $('div.wrapPaging > a'),
-                lastPageHref = pageLinks[pageLinks.length-1].attribs.href;
 
-            maxPage = parseInt(DinamotoScrapper.getPage(lastPageHref));
+        try {
+            const response = await got(url);
+            const $ = cheerioModule.load(response.body);
+
+            if (page === 0) {
+                const pageLinks = $('div.wrapPaging > a'),
+                    lastPageHref = pageLinks[pageLinks.length - 1].attribs.href;
+
+                maxPage = parseInt(DinamotoScrapper.getPage(lastPageHref));
+            }
+
+            const products = $('div.catalog-list > div > ul > li > a');
+            for (let i = 0; i < products.length; i++) {
+                try {
+                    productRow += await this.loadProduct(products[i].attribs.href, productRow, productSheet);
+                } catch (e) {
+                    // do nothing, just ignore 404 error
+                }
+            }
+
+            await this.logStore.storeLog(
+                {
+                    processed: productRow - 2,
+                },
+                DinamotoScrapper.BASE_NAME
+            );
+        } catch (e) {
+            // do nothing, just ignore 404 error
         }
-
-        const products = $('div.catalog-list > div > ul > li > a');
-        for (let i = 0; i < products.length; i++) {
-            productRow += await this.loadProduct(products[i].attribs.href, productRow, productSheet);
-        }
-
-        await this.logStore.storeLog(
-            {
-                processed: productRow - 2,
-            },
-            DinamotoScrapper.BASE_NAME
-        );
 
         return [maxPage, productRow];
     }

@@ -10,11 +10,14 @@ export class MailSender {
 
     public async sendEmail(emailsTo: string[], subject: string, text: string) {
         const smtpTransport = nodemailer.createTransport({
-                service: "gmail",
+                host: environment.smtpConfig.host,
+                port: environment.smtpConfig.port,
+                secure: environment.smtpConfig.secure,
                 auth: {
-                    user: environment.googleConfig.username,
-                    pass: environment.googleConfig.password,
+                    user: environment.smtpConfig.username,
+                    pass: environment.smtpConfig.password,
                 },
+
             });
 
         for (let i = 0; i < emailsTo.length; i++) {

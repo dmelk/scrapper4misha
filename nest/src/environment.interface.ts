@@ -1,10 +1,13 @@
-interface GoogleConfigInterface {
+interface SmotpConfigInterface {
     username: string;
     password: string;
+    host: string;
+    port: number;
+    secure: boolean;
 }
 
 export interface EnvironmentInterface {
-    googleConfig: GoogleConfigInterface;
+    smtpConfig: SmotpConfigInterface;
     emailFrom: string;
     emailsTo: string[];
     webPath: string;

@@ -96,33 +96,42 @@ export class MotoCrazyTownScrapper {
             url = url.concat(MotoCrazyTownScrapper.PAGE_URL, page.toString());
         }
 
-        const response = await got(url);
-        const $ = cheerioModule.load(response.body);
-
-        // get maxPage
         let maxPage = oldMaxPage;
-        if (page === 0) {
-            const pageLinks = $('a.page-link');
-            if (pageLinks.length !== 0) {
-                const lastPageHref = pageLinks[pageLinks.length - 1].attribs.href;
 
-                maxPage = parseInt(MotoCrazyTownScrapper.getPage(lastPageHref));
+        try {
+            const response = await got(url);
+            const $ = cheerioModule.load(response.body);
+
+            // get maxPage
+            if (page === 0) {
+                const pageLinks = $('a.page-link');
+                if (pageLinks.length !== 0) {
+                    const lastPageHref = pageLinks[pageLinks.length - 1].attribs.href;
+
+                    maxPage = parseInt(MotoCrazyTownScrapper.getPage(lastPageHref));
+                }
             }
-        }
 
-        const catalogHtml = cheerioModule.html($('div.jshop_list_category')),
-            catalog$ = cheerioModule.load(catalogHtml);
-        const products = catalog$('a.product');
-        for (let i = 0; i < products.length; i++) {
-            productRow += await this.loadProduct(products[i].attribs.href, productRow, productSheet);
-        }
+            const catalogHtml = cheerioModule.html($('div.jshop_list_category')),
+                catalog$ = cheerioModule.load(catalogHtml);
+            const products = catalog$('a.product');
+            for (let i = 0; i < products.length; i++) {
+                try {
+                    productRow += await this.loadProduct(products[i].attribs.href, productRow, productSheet);
+                } catch (e) {
+                    // do nothing, just ignore 404 error
+                }
+            }
 
-        await this.logStore.storeLog(
-            {
-                processed: productRow - 2,
-            },
-            MotoCrazyTownScrapper.BASE_NAME
-        );
+            await this.logStore.storeLog(
+                {
+                    processed: productRow - 2,
+                },
+                MotoCrazyTownScrapper.BASE_NAME
+            );
+        } catch (e) {
+            // do nothing, just ignore 404 error
+        }
 
         return [maxPage, productRow];
     }

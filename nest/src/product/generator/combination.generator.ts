@@ -16,6 +16,7 @@ export class CombinationGenerator {
                 if (list.length === 0) {
                     newList.push([
                         {
+                            id: currVariant.id,
                             name: currVariant.name,
                             value: variantValue,
                             optionId: (currVariant.optionId)? currVariant.optionId : '',
@@ -28,6 +29,7 @@ export class CombinationGenerator {
                             const newElem = listElem.slice();
                             newElem.push(
                                 {
+                                    id: currVariant.id,
                                     name: currVariant.name,
                                     value: variantValue,
                                     optionId: (currVariant.optionId)? currVariant.optionId : '',

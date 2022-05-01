@@ -1,10 +1,10 @@
 import {Controller, Post} from '@nestjs/common';
-import {MotoCrazyTownScrapper} from '../scrapper/moto-crazy-town.scrapper';
+import {ProductScrapper} from "../scrapper/product.scrapper";
 
-@Controller('/api/motocrazytown')
-export class MotoCrazyTownController {
+@Controller('/api/product')
+export class ProductController {
     constructor(
-        private readonly scrapper: MotoCrazyTownScrapper
+        private readonly scrapper: ProductScrapper
     ) {
     }
 

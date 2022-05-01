@@ -1,19 +1,17 @@
 import {Injectable} from '@nestjs/common';
 import {ExcelGenerator} from '../../product/generator/excel.generator';
 import {LogStore} from '../../log/store/log.store';
-import {ProductAttributesMap} from '../../product/type/product-attributes.map';
-import {ProductAttributeInterface} from '../../product/type/product-attribute.interface';
-import {ScrapperStatus} from '../../log/type/scrapper.status';
 import got from 'got';
 import cheerioModule from 'cheerio';
 import {ProductInfo} from '../../product/type/product.info';
 import {catalogList} from './catalog.list';
 import {CombinationGenerator} from '../../product/generator/combination.generator';
+import {ProductAttributeInfo} from "../../product/type/product-attribute.info";
+import {ProductScrapper} from "../../scrapper/scrapper/product.scrapper";
+import {ScrapperInterface} from "../../product/scrapper/scrapper.interface";
 
 @Injectable()
-export class MotodomScrapper {
-    private static readonly BASE_NAME = 'motodom';
-
+export class MotodomScrapper implements ScrapperInterface {
     private static readonly BASE_URL = 'https://motodom.ua/';
 
     private static readonly PAGE_URL = '?page=';
@@ -22,28 +20,11 @@ export class MotodomScrapper {
 
     private static readonly PAGE_STEP = 1;
 
-    private readonly productAttributes: ProductAttributesMap;
-
     constructor(
         private readonly excelGenerator: ExcelGenerator,
         private readonly logStore: LogStore,
         private readonly combinationGenerator: CombinationGenerator,
     ) {
-        this.productAttributes = new Map<string, ProductAttributeInterface>();
-        this.productAttributes.set(
-            'цвет',
-            {
-                title: 'Цвет',
-                column: 15,
-            }
-        );
-        this.productAttributes.set(
-            'размер',
-            {
-                title: 'Размер',
-                column: 16,
-            }
-        );
     }
 
     private static getPage(href) {
@@ -51,22 +32,7 @@ export class MotodomScrapper {
         return matches[matches.length - 1];
     }
 
-    public async startScrapping(): Promise<string> {
-        await this.logStore.storeLog(
-            {
-                status: ScrapperStatus.IN_PROGRESS,
-                started: (new Date()).toISOString(),
-                processed: 0
-            },
-            MotodomScrapper.BASE_NAME
-        );
-
-        const workbook = this.excelGenerator.createWorkbook(),
-            productSheet = this.excelGenerator.createProductSheet(workbook, this.productAttributes);
-
-        this.excelGenerator.createGroupsSheet(workbook);
-
-        let productRow = 2;
+    public async startScrapping(productRow: number, productSheet: any): Promise<number> {
         for (let i = 0; i < catalogList.length; i++) {
             const catalogPage = catalogList[i];
             let maxPage = 1;
@@ -75,17 +41,7 @@ export class MotodomScrapper {
             }
         }
 
-        const xlsName = this.excelGenerator.saveWorkbook(workbook, MotodomScrapper.BASE_NAME);
-        await this.logStore.storeLog(
-            {
-                finished: (new Date()).toISOString(),
-                status: ScrapperStatus.COMPLETED,
-                path: xlsName,
-            },
-            MotodomScrapper.BASE_NAME
-        );
-
-        return xlsName;
+        return productRow;
     }
 
     private async loadCatalogPage(page: number, oldMaxPage: number, catalogPage: string, productRow: number, productSheet): Promise<[number, number]> {
@@ -126,7 +82,7 @@ export class MotodomScrapper {
                 {
                     processed: productRow - 2,
                 },
-                MotodomScrapper.BASE_NAME
+                ProductScrapper.BASE_NAME
             );
         } catch (e) {
             // do nothing, just ignore 404 error
@@ -140,19 +96,24 @@ export class MotodomScrapper {
             $ = cheerioModule.load(response.body);
 
         const productInfo: ProductInfo = {
-            link: url,
-            currency: 'грн.',
-            available: '+',
-            name: '',
-            manufacturer: '',
             skus: [],
+            manufacturer: '',
+            barcode: '',
+            sex: '',
+            parentCategory: '',
+            category: '',
+            name: '',
+            amount: 1,
+            priceWholesaleUsd: '0',
+            priceUsd: '0',
             prices: [],
             description: '',
             descriptionHtml: '',
-            unitName: 'шт.',
-            discount: '',
-            combinations: [],
+            kit: '',
             photos: [],
+            combinations: [],
+            supplier: 2,
+            link: url,
         };
 
         const names = $('div.page-title');
@@ -182,6 +143,23 @@ export class MotodomScrapper {
                 productInfo.photos.push(
                     img.attribs['data-largeimg']
                 );
+            }
+        );
+
+        const categories = $('ul.breadcrumb > li');
+        categories.each(
+            (i, li) => {
+                if (i === 1 || i === 2) {
+                    const liHtml = cheerioModule.html(li.children),
+                        li$ = cheerioModule.load(liHtml),
+                        aEl = li$('a'),
+                        value = aEl.html();
+                    if (i === 1) {
+                        productInfo.parentCategory = value;
+                    } else {
+                        productInfo.category = value;
+                    }
+                }
             }
         );
 
@@ -237,10 +215,13 @@ export class MotodomScrapper {
                         return;
                     }
                     const attrId = attrIds.html().toLowerCase();
-                    if (!this.productAttributes.has(attrId)) {
-                        return;
-                    }
+
+                    const variantId = (attrId === 'цвет')? ProductAttributeInfo.COLOR : ((attrId === 'размер')? ProductAttributeInfo.SIZE : '');
+
+                    if (variantId === '') return;
+
                     const variantData = {
+                        id: variantId,
                         name: attrId,
                         optionId: '',
                         values: [],
@@ -327,7 +308,7 @@ export class MotodomScrapper {
                             combination.forEach(
                                 variantData => {
                                     productCombination.push({
-                                        name: variantData.name,
+                                        name: variantData.id,
                                         value: variantData.variantName
                                     })
                                 }
@@ -344,7 +325,6 @@ export class MotodomScrapper {
 
         return this.excelGenerator.addProductToSheet(
             productInfo,
-            this.productAttributes,
             productRow,
             productSheet,
         );

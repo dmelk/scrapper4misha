@@ -1,91 +1,51 @@
 import {Injectable} from '@nestjs/common';
 import {ExcelGenerator} from '../../product/generator/excel.generator';
 import {LogStore} from '../../log/store/log.store';
-import {ProductAttributesMap} from '../../product/type/product-attributes.map';
-import {ProductAttributeInterface} from '../../product/type/product-attribute.interface';
-import {ScrapperStatus} from '../../log/type/scrapper.status';
 import got from 'got';
 import {ProductInfo} from '../../product/type/product.info';
 import cheerioModule from 'cheerio';
 import {CombinationGenerator} from '../../product/generator/combination.generator';
+import {ScrapperInterface} from "../../product/scrapper/scrapper.interface";
+import {ProductScrapper} from "../../scrapper/scrapper/product.scrapper";
+import {ProductAttributeInfo} from "../../product/type/product-attribute.info";
+import {catalogList} from "./catalog.list";
+// import {catalogList} from "./catalog.list";
 
 @Injectable()
-export class DinamotoScrapper {
-    private static readonly BASE_NAME = 'dinamoto';
-
+export class DinamotoScrapper implements ScrapperInterface {
     private static readonly BASE_URL = 'http://dinamoto.com.ua/';
 
-    private static readonly CATALOG_URL = 'catalog/';
+    private static readonly PAGE_URL = '?page=';
 
-    private static readonly PAGE_URL = 'page/';
-
-    private static readonly PAGE_STEP = 20;
-
-    private readonly productAttributes: ProductAttributesMap;
+    private static readonly PAGE_STEP = 1;
 
     constructor(
         private readonly excelGenerator: ExcelGenerator,
         private readonly logStore: LogStore,
         private readonly combinationGenerator: CombinationGenerator,
     ) {
-        this.productAttributes = new Map<string, ProductAttributeInterface>();
-        this.productAttributes.set(
-            'цвет',
-            {
-                title: 'Цвет',
-                column: 15,
-            }
-        );
-        this.productAttributes.set(
-            'размеры',
-            {
-                title: 'Размер',
-                column: 16,
-            }
-        );
     }
 
-    public async startScrapping(): Promise<string> {
-        await this.logStore.storeLog(
-            {
-                status: ScrapperStatus.IN_PROGRESS,
-                started: (new Date()).toISOString(),
-                processed: 0
-            },
-            DinamotoScrapper.BASE_NAME
-        );
-
-        const workbook = this.excelGenerator.createWorkbook(),
-            productSheet = this.excelGenerator.createProductSheet(workbook, this.productAttributes);
-
-        this.excelGenerator.createGroupsSheet(workbook);
-
-        let productRow = 2, maxPage = 0;
-        for (let currPage = 0; currPage <= maxPage; currPage += DinamotoScrapper.PAGE_STEP) {
-            [maxPage, productRow] = await this.loadCatalogPage(currPage, maxPage, productRow, productSheet);
+    public async startScrapping(productRow: number, productSheet: any): Promise<number> {
+        for (let i = 0; i < catalogList.length; i++) {
+            const catalogPage = catalogList[i];
+            let maxPage = 1;
+            for (let currPage = 1; currPage <= maxPage; currPage += DinamotoScrapper.PAGE_STEP) {
+                [maxPage, productRow] = await this.loadCatalogPage(currPage, maxPage, catalogPage, productRow, productSheet);
+            }
         }
 
-        const xlsName = this.excelGenerator.saveWorkbook(workbook, DinamotoScrapper.BASE_NAME);
-        await this.logStore.storeLog(
-            {
-                finished: (new Date()).toISOString(),
-                status: ScrapperStatus.COMPLETED,
-                path: xlsName,
-            },
-            DinamotoScrapper.BASE_NAME
-        );
-
-        return xlsName;
+        return productRow;
     }
 
     private static getPage(href) {
-        const matches = Array.from(href.matchAll(/\?p=(.*)/g), m => m[1]);
+        const matches = Array.from(href.matchAll(/\?page=(.*)/g), m => m[1]);
         return matches[matches.length - 1];
     }
 
-    private async loadCatalogPage(page: number, oldMaxPage: number, productRow: number, productSheet): Promise<[number, number]> {
-        let url = DinamotoScrapper.BASE_URL.concat(DinamotoScrapper.CATALOG_URL);
-        if (page !== 0) {
+    private async loadCatalogPage(page: number, oldMaxPage: number, catalogPage: string, productRow: number, productSheet): Promise<[number, number]> {
+        let url = DinamotoScrapper.BASE_URL.concat(catalogPage);
+        if (page !== 1) {
             url = url.concat(DinamotoScrapper.PAGE_URL, page.toString());
         }
 
@@ -96,17 +56,40 @@ export class DinamotoScrapper {
             const response = await got(url);
             const $ = cheerioModule.load(response.body);
 
-            if (page === 0) {
-                const pageLinks = $('div.wrapPaging > a'),
-                    lastPageHref = pageLinks[pageLinks.length - 1].attribs.href;
+            if (page === 1) {
+                const pageLinks = $('a.page-link');
 
-                maxPage = parseInt(DinamotoScrapper.getPage(lastPageHref));
+                if (pageLinks.length > 2) {
+                    const lastPageHref = pageLinks[pageLinks.length - 2].attribs.href;
+                    maxPage = parseInt(DinamotoScrapper.getPage(lastPageHref));
+                }
             }
 
-            const products = $('div.catalog-list > div > ul > li > a');
+            let parentCategory = '', category = '';
+            const categories = $('ol.breadcrumb > li');
+            categories.each(
+                (i, li) => {
+                    if (i === 1 || i === 2) {
+                        const value = cheerioModule.text(li.children);
+                        if (i === 1) {
+                            parentCategory = value;
+                        } else {
+                            category = value;
+                        }
+                    }
+                }
+            );
+
+            const products = $('ul.list-product > li > div.block');
             for (let i = 0; i < products.length; i++) {
+                if (products[i].attribs.class.includes('add-new-product')) continue;
+                const productHtml = cheerioModule.html(products[i].children),
+                    product$ = cheerioModule.load(productHtml),
+                    productA = product$('a');
+                if (productA.length === 0) continue;
+
                 try {
-                    productRow += await this.loadProduct(products[i].attribs.href, productRow, productSheet);
+                    productRow += await this.loadProduct(productA[0].attribs.href, productRow, productSheet, parentCategory, category);
                 } catch (e) {
                     // do nothing, just ignore 404 error
                 }
@@ -116,7 +99,7 @@ export class DinamotoScrapper {
                 {
                     processed: productRow - 2,
                 },
-                DinamotoScrapper.BASE_NAME
+                ProductScrapper.BASE_NAME
             );
         } catch (e) {
             // do nothing, just ignore 404 error
@@ -125,82 +108,119 @@ export class DinamotoScrapper {
         return [maxPage, productRow];
     }
 
-    private async loadProduct(url: string, productRow: number, productSheet): Promise<number> {
+    private async loadProduct(url: string, productRow: number, productSheet, parentCategory: string, category: string): Promise<number> {
         const response = await got(url);
         const $ = cheerioModule.load(response.body);
 
+        const buyDiv = $('div.block-btn-item-buy');
+        if (buyDiv.length === 0) {
+            // skip not available product
+            return 0;
+        }
+
         const productInfo: ProductInfo = {
-            link: url,
-            currency: 'грн.',
-            available: '+',
-            name: '',
-            manufacturer: '',
             skus: [],
+            manufacturer: '',
+            barcode: '',
+            sex: '',
+            parentCategory: parentCategory,
+            category: category,
+            name: '',
+            amount: 1,
+            priceWholesaleUsd: '0',
+            priceUsd: '0',
             prices: [],
             description: '',
             descriptionHtml: '',
-            unitName: 'шт.',
-            discount: '',
-            combinations: [],
+            kit: '',
             photos: [],
+            combinations: [],
+            supplier: 1,
+            link: url,
         };
 
-        const names = $('h1[property="name"]');
+        const names = $('h2.title-product');
         if (names.length) {
             productInfo.name = names.html();
         }
 
-        const descriptions = $('span[property="description"]');
-        if (descriptions.length) {
-            productInfo.descriptionHtml = descriptions.html();
-            productInfo.description = cheerioModule.text(descriptions);
+        // const descriptions = $('#details > p');
+        // if (descriptions.length) {
+        //     productInfo.descriptionHtml = descriptions.html();
+        //     productInfo.description = cheerioModule.text(descriptions);
+        // }
+
+        const sex = $('block-sex');
+        if (sex.length) {
+            const sexList: string[] = JSON.parse(sex[0].attribs[':sexs']);
+            productInfo.sex = sexList.join(' ');
         }
 
-        const prices = $('meta[property="price"]');
+        let productSku = '';
+        const sku = $('#CardProductAttr > div > span.article');
+        if (sku.length) {
+            const skuArr = sku.html().split(' ');
+            skuArr.shift();
+            productSku = skuArr.join(' ');
+        }
+
+        const prices = $('#CardProductAttr > div.price > span');
         let productPrice = 0;
         if (prices.length) {
-            productPrice = parseFloat(prices[0].attribs.content);
+            productPrice = parseFloat(cheerioModule.text(prices[0].children));
         }
 
-        const variants = [];
-        let productSku = '';
-        $('div.catalog-item-info-inside > div').each(
-            (i, div) => {
-                if (i === 0) {
-                    // manufacturer
-                    productInfo.manufacturer = $('p', div).html();
-                    return;
-                }
-                if (i === 1) {
-                    // vendorCode
-                    productSku = $('p', div).html();
-                    return;
-                }
-                const variant = {
-                    name: '',
-                    values: []
-                };
+        $('#details > table > tbody > tr').each(
+            (idx, row) => {
+                if (idx !== 0) return;
+                let rowHtml = cheerioModule.html(row.children);
+                rowHtml = rowHtml.replace(/td/gi, 'div')
+                const row$ = cheerioModule.load(rowHtml);
 
-                variant.name = $('strong', div).html();
-                variant.name = variant.name.toLowerCase();
-                $('a', div).each(
-                    (j, a) => {
-                        if (a.attribs['data-id']) {
-                            variant.values.push(
-                                cheerioModule.text(a.children)
-                            );
+                row$('div').each(
+                    (colIdx, col) => {
+                        if (colIdx === 1) {
+                            productInfo.manufacturer = cheerioModule.text(col.children);
                         }
                     }
-                );
-                if (variant.values.length !== 0) {
-                    variants.push(variant);
-                }
+                )
             }
-        )
+        );
+
+        const variants = [];
+
+        const size = $('block-size');
+        if (size.length) {
+            const sizeList: string[] = JSON.parse(size[0].attribs[':sizes']);
+            if (sizeList.length > 0) {
+                variants.push({
+                    id: ProductAttributeInfo.SIZE,
+                    name: ProductAttributeInfo.SIZE,
+                    optionId: '',
+                    values: sizeList,
+                    names: [],
+                });
+            }
+        }
+
+        const color = $('block-color');
+        if (color.length) {
+            const colorList: string[] = JSON.parse(color[0].attribs[':colors']);
+            if (colorList.length > 0) {
+                variants.push({
+                    id: ProductAttributeInfo.COLOR,
+                    name: ProductAttributeInfo.COLOR,
+                    optionId: '',
+                    values: colorList,
+                    names: [],
+                });
+            }
+        }
 
         if (variants.length === 0) {
             variants.push(
                 {
+                    id: '',
                     name: '',
                     values: [''],
                 }
@@ -213,15 +233,14 @@ export class DinamotoScrapper {
             productInfo.skus.push(productSku);
         }
 
-        $('ul.catalog-photos > li > a').each(
-            (i, a) => {
-                productInfo.photos.push(DinamotoScrapper.BASE_URL.concat(a.attribs.href));
+        $('section.d-md-none > div > div > div > div > div > div.thumbImg > img').each(
+            (i, img) => {
+                productInfo.photos.push(img.attribs.src);
             }
-        )
+        );
 
         return this.excelGenerator.addProductToSheet(
             productInfo,
-            this.productAttributes,
             productRow,
             productSheet,
         );

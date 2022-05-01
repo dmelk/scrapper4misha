@@ -1,18 +1,16 @@
 import {Injectable} from '@nestjs/common';
-import {ProductAttributesMap} from '../../product/type/product-attributes.map';
 import {ExcelGenerator} from '../../product/generator/excel.generator';
 import {LogStore} from '../../log/store/log.store';
-import {ProductAttributeInterface} from '../../product/type/product-attribute.interface';
 import got from 'got';
 import cheerioModule from 'cheerio';
-import {ScrapperStatus} from '../../log/type/scrapper.status';
 import {catalogList} from './catalog.list';
 import {ProductInfo} from '../../product/type/product.info';
+import {ScrapperInterface} from "../../product/scrapper/scrapper.interface";
+import {ProductAttributeInfo} from "../../product/type/product-attribute.info";
+import {ProductScrapper} from "../../scrapper/scrapper/product.scrapper";
 
 @Injectable()
-export class MotoCrazyTownScrapper {
-    private static readonly BASE_NAME = 'motocrazytown';
-
+export class MotoCrazyTownScrapper implements ScrapperInterface {
     private static readonly BASE_URL = 'https://www.motocrazytown.com.ua';
 
     private static readonly CATALOG_URL = '/catalog/';
@@ -25,27 +23,12 @@ export class MotoCrazyTownScrapper {
 
     private static ATTRIBUTES_IDS = ['1', '2'];
 
-    private readonly productAttributes: ProductAttributesMap;
+    private static VARIANT_IDS = [ProductAttributeInfo.COLOR, ProductAttributeInfo.SIZE];
 
     constructor(
         private readonly excelGenerator: ExcelGenerator,
         private readonly logStore: LogStore,
     ) {
-        this.productAttributes = new Map<string, ProductAttributeInterface>();
-        this.productAttributes.set(
-            '1',
-            {
-                title: 'Цвет',
-                column: 15,
-            }
-        );
-        this.productAttributes.set(
-            '2',
-            {
-                title: 'Размер',
-                column: 16,
-            }
-        );
     }
 
     private static getPage(href) {
@@ -53,22 +36,7 @@ export class MotoCrazyTownScrapper {
         return matches[matches.length - 1];
     }
 
-    public async startScrapping(): Promise<string> {
-        await this.logStore.storeLog(
-            {
-                status: ScrapperStatus.IN_PROGRESS,
-                started: (new Date()).toISOString(),
-                processed: 0
-            },
-            MotoCrazyTownScrapper.BASE_NAME
-        );
-
-        const workbook = this.excelGenerator.createWorkbook(),
-            productSheet = this.excelGenerator.createProductSheet(workbook, this.productAttributes);
-
-        this.excelGenerator.createGroupsSheet(workbook);
-
-        let productRow = 2;
+    public async startScrapping(productRow: number, productSheet: any): Promise<number> {
         for (let i = 0; i < catalogList.length; i++) {
             const catalogPage = catalogList[i];
             let maxPage = 0;
@@ -77,17 +45,7 @@ export class MotoCrazyTownScrapper {
             }
         }
 
-        const xlsName = this.excelGenerator.saveWorkbook(workbook, MotoCrazyTownScrapper.BASE_NAME);
-        await this.logStore.storeLog(
-            {
-                finished: (new Date()).toISOString(),
-                status: ScrapperStatus.COMPLETED,
-                path: xlsName,
-            },
-            MotoCrazyTownScrapper.BASE_NAME
-        );
-
-        return xlsName;
+        return productRow;
     }
 
     private async loadCatalogPage(page: number, oldMaxPage: number, catalogPage: string, productRow: number, productSheet): Promise<[number, number]> {
@@ -127,7 +85,7 @@ export class MotoCrazyTownScrapper {
                 {
                     processed: productRow - 2,
                 },
-                MotoCrazyTownScrapper.BASE_NAME
+                ProductScrapper.BASE_NAME
             );
         } catch (e) {
             // do nothing, just ignore 404 error
@@ -142,19 +100,24 @@ export class MotoCrazyTownScrapper {
             $ = cheerioModule.load(response.body);
 
         const productInfo: ProductInfo = {
-            link: url,
-            currency: 'грн.',
-            available: '+',
-            name: '',
-            manufacturer: '',
             skus: [],
+            manufacturer: '',
+            barcode: '',
+            sex: '',
+            parentCategory: '',
+            category: '',
+            name: '',
+            amount: 1,
+            priceWholesaleUsd: '0',
+            priceUsd: '0',
             prices: [],
             description: '',
             descriptionHtml: '',
-            unitName: 'шт.',
-            discount: '',
-            combinations: [],
+            kit: '',
             photos: [],
+            combinations: [],
+            supplier: 3,
+            link: url,
         };
 
         const names = $('h1.title');
@@ -174,6 +137,23 @@ export class MotoCrazyTownScrapper {
             productInfo.description = cheerioModule.text(descriptions);
         }
 
+        const categories = $('ul[itemtype="https://schema.org/BreadcrumbList"] > li');
+        categories.each(
+            (i, li) => {
+                if (i === 1 || i === 2) {
+                    const liHtml = cheerioModule.html(li.children),
+                        li$ = cheerioModule.load(liHtml),
+                        aEl = li$('a > span'),
+                        value = aEl.html();
+                    if (i === 1) {
+                        productInfo.parentCategory = value;
+                    } else {
+                        productInfo.category = value;
+                    }
+                }
+            }
+        );
+
         $('#list_product_image_middle > div > img').each(
             (i, img) => {
                 productInfo.photos.push(img.attribs.src);
@@ -181,6 +161,7 @@ export class MotoCrazyTownScrapper {
         )
 
         const variantData = {
+            id : '',
             name: '',
             values: [],
             names: [],
@@ -191,6 +172,7 @@ export class MotoCrazyTownScrapper {
                 options = $(`${selectId} > option`);
 
             if (options.length !== 0) {
+                variantData.id = MotoCrazyTownScrapper.VARIANT_IDS[i];
                 variantData.name = attrId;
 
                 options.each(
@@ -273,7 +255,7 @@ export class MotoCrazyTownScrapper {
 
                 productInfo.combinations.push([
                     {
-                        name: variantData.name,
+                        name: variantData.id,
                         value: variantName
                     }
                 ]);
@@ -282,7 +264,6 @@ export class MotoCrazyTownScrapper {
 
         return this.excelGenerator.addProductToSheet(
             productInfo,
-            this.productAttributes,
             productRow,
             productSheet,
         );

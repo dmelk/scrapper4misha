@@ -1,8 +1,8 @@
 import {Injectable} from '@nestjs/common';
 import * as xl from 'excel4node';
-import {ProductAttributesMap} from '../type/product-attributes.map';
 import {ProductInfo} from '../type/product.info';
 import {ProductSheetConfig} from '../type/product-sheet.config';
+import {ProductAttributeInfo} from "../type/product-attribute.info";
 
 @Injectable()
 export class ExcelGenerator {
@@ -13,57 +13,62 @@ export class ExcelGenerator {
         return new xl.Workbook();
     }
 
-    public createProductSheet(workbook, productAttributes: ProductAttributesMap) {
+    public createProductSheet(workbook) {
         const productSheet = workbook.addWorksheet('Export products sheet', {});
 
         productSheet.cell(1, 1)
-            .string('Название_позиции');
+            .string('Артикул');
 
         productSheet.cell(1, 2)
-            .string('Поисковые_запросы');
+            .string('Бренд');
 
         productSheet.cell(1, 3)
-            .string('Описание');
+            .string('Цвет');
 
         productSheet.cell(1, 4)
-            .string('Тип_товара');
+            .string('Штрих код');
 
         productSheet.cell(1, 5)
-            .string('Цена');
+            .string('Размер');
 
         productSheet.cell(1, 6)
-            .string('Валюта');
+            .string('Пол');
 
         productSheet.cell(1, 7)
-            .string('Скидка');
+            .string('Раздел');
 
         productSheet.cell(1, 8)
-            .string('Единица_измерения');
+            .string('Категория');
 
         productSheet.cell(1, 9)
-            .string('Ссылка_изображения');
+            .string('Название');
 
         productSheet.cell(1, 10)
-            .string('Наличие');
+            .string('Остаток по складу');
 
         productSheet.cell(1, 11)
-            .string('Идентификатор_товара');
+            .string('Цена опт, $');
 
         productSheet.cell(1, 12)
-            .string('Идентификатор_группы');
+            .string('Цена розница, $');
 
         productSheet.cell(1, 13)
-            .string('Личные_заметки');
+            .string('Цена розница, грн');
 
         productSheet.cell(1, 14)
-            .string('Ссылка_на_товар_на_сайте');
+            .string('Описание');
 
-        productAttributes.forEach(
-            (attr) => {
-                productSheet.cell(1, attr.column)
-                    .string(attr.title);
-            }
-        )
+        productSheet.cell(1, 15)
+            .string('Изображения');
+
+        productSheet.cell(1, 16)
+            .string('Комплекты');
+
+        productSheet.cell(1, 17)
+            .string('Поставщик');
+
+        productSheet.cell(1, 18)
+            .string('URL');
 
         return productSheet;
     }
@@ -87,18 +92,30 @@ export class ExcelGenerator {
             .string('Идентификатор_родителя');
     }
 
-    public addProductToSheet(productInfo: ProductInfo, productAttributes: ProductAttributesMap, productRow: number, productSheet): number {
+    public addProductToSheet(productInfo: ProductInfo, productRow: number, productSheet): number {
         let added = 0;
+
+        // console.log(productInfo, productInfo.combinations);
 
         productInfo.combinations.forEach(
             (combination, idx) => {
                 combination.forEach(
                     variantInfo => {
-                        if (variantInfo.name !== '' && productAttributes.has(variantInfo.name)) {
+                        if (variantInfo.name === ProductAttributeInfo.COLOR) {
                             productSheet
                                 .cell(
                                     productRow + added,
-                                    productAttributes.get(variantInfo.name).column
+                                    ProductSheetConfig.COLOR
+                                )
+                                .string(
+                                    variantInfo.value
+                                );
+                        }
+                        if (variantInfo.name === ProductAttributeInfo.SIZE) {
+                            productSheet
+                                .cell(
+                                    productRow + added,
+                                    ProductSheetConfig.SIZE
                                 )
                                 .string(
                                     variantInfo.value
@@ -108,9 +125,15 @@ export class ExcelGenerator {
                 );
 
                 productSheet
-                    .cell(productRow + added, ProductSheetConfig.PRICE)
-                    .number(
-                        productInfo.prices[idx]
+                    .cell(productRow + added, ProductSheetConfig.SKU)
+                    .string(
+                        productInfo.skus[idx]
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.MANUFACTURER)
+                    .string(
+                        productInfo.manufacturer
                     );
 
                 productSheet
@@ -120,15 +143,51 @@ export class ExcelGenerator {
                     );
 
                 productSheet
-                    .cell(productRow + added, ProductSheetConfig.AVAILABLE)
+                    .cell(productRow + added, ProductSheetConfig.BARCODE)
                     .string(
-                        productInfo.available
+                        productInfo.barcode
                     );
 
                 productSheet
-                    .cell(productRow + added, ProductSheetConfig.CURRENCY)
+                    .cell(productRow + added, ProductSheetConfig.SEX)
                     .string(
-                        productInfo.currency
+                        productInfo.sex
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.PARENT_CATEGORY)
+                    .string(
+                        productInfo.parentCategory
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.CATEGORY)
+                    .string(
+                        productInfo.category
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.AMOUNT)
+                    .string(
+                        productInfo.amount.toFixed(0)
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.PRICE_WHOLESALE_USD)
+                    .string(
+                        productInfo.priceWholesaleUsd
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.PRICE_USD)
+                    .string(
+                        productInfo.priceUsd
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.PRICE)
+                    .number(
+                        productInfo.prices[idx]
                     );
 
                 productSheet
@@ -138,27 +197,21 @@ export class ExcelGenerator {
                     );
 
                 productSheet
-                    .cell(productRow + added, ProductSheetConfig.DISCOUNT)
-                    .string(
-                        productInfo.discount
-                    );
-
-                productSheet
-                    .cell(productRow + added, ProductSheetConfig.UNIT_NAME)
-                    .string(
-                        productInfo.unitName
-                    );
-
-                productSheet
-                    .cell(productRow + added, ProductSheetConfig.SKU)
-                    .string(
-                        productInfo.skus[idx]
-                    );
-
-                productSheet
                     .cell(productRow + added, ProductSheetConfig.IMAGE_URL)
                     .string(
                         productInfo.photos.join(', ')
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.KIT)
+                    .string(
+                        productInfo.kit
+                    );
+
+                productSheet
+                    .cell(productRow + added, ProductSheetConfig.SUPPLIER)
+                    .string(
+                        productInfo.supplier.toFixed(0)
                     );
 
                 productSheet

@@ -58,9 +58,7 @@ let getStatus = (name) => {
     xhttp.send();
 }
 
-getStatus('dinamoto');
-getStatus('motocrazytown');
-getStatus('motodom');
+getStatus('product');
 
 new mdc.dataTable.MDCDataTable(document.querySelector('.mdc-data-table'));
 new mdc.ripple.MDCRipple(document.querySelector('.mdc-button'));

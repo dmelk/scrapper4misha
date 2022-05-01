@@ -26,67 +26,21 @@
                 </thead>
                 <tbody class="mdc-data-table__content">
                 <tr class="mdc-data-table__row">
-                    <th class="mdc-data-table__cell" scope="row">Dinamoto</th>
-                    <td class="mdc-data-table__cell" id="dinamotoStatus"></td>
-                    <td class="mdc-data-table__cell" id="dinamotoStartedVal"></td>
-                    <td class="mdc-data-table__cell mdc-data-table__cell--numeric" id="dinamotoProcessedVal"></td>
-                    <td class="mdc-data-table__cell" id="dinamotoFinishedVal"></td>
+                    <th class="mdc-data-table__cell" scope="row">All</th>
+                    <td class="mdc-data-table__cell" id="productStatus"></td>
+                    <td class="mdc-data-table__cell" id="productStartedVal"></td>
+                    <td class="mdc-data-table__cell mdc-data-table__cell--numeric" id="productProcessedVal"></td>
+                    <td class="mdc-data-table__cell" id="productFinishedVal"></td>
                     <td class="mdc-data-table__cell">
                         <div class="mdc-touch-target-wrapper">
-                            <button class="mdc-button mdc-button--touch" id="dinamotoBtn" disabled onclick="start('dinamoto')">
+                            <button class="mdc-button mdc-button--touch" id="productBtn" disabled onclick="start('product')">
                                 <span class="mdc-button__ripple"></span>
                                 <span class="mdc-button__label">Start scrapping</span>
                                 <span class="mdc-button__touch"></span>
                             </button>
                         </div>
-                        <div class="mdc-touch-target-wrapper hidden" id="dinamotoDownloadWrapper">
-                            <a class="mdc-button mdc-button--touch" id="dinamotoDownload">
-                                <span class="mdc-button__ripple"></span>
-                                <span class="mdc-button__label">Download xls</span>
-                                <span class="mdc-button__touch"></span>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="mdc-data-table__row">
-                    <th class="mdc-data-table__cell" scope="row">Moto Crazy Town</th>
-                    <td class="mdc-data-table__cell" id="motocrazytownStatus"></td>
-                    <td class="mdc-data-table__cell" id="motocrazytownStartedVal"></td>
-                    <td class="mdc-data-table__cell mdc-data-table__cell--numeric" id="motocrazytownProcessedVal"></td>
-                    <td class="mdc-data-table__cell" id="motocrazytownFinishedVal"></td>
-                    <td class="mdc-data-table__cell">
-                        <div class="mdc-touch-target-wrapper">
-                            <button class="mdc-button mdc-button--touch" id="motocrazytownBtn" disabled onclick="start('motocrazytown')">
-                                <span class="mdc-button__ripple"></span>
-                                <span class="mdc-button__label">Start scrapping</span>
-                                <span class="mdc-button__touch"></span>
-                            </button>
-                        </div>
-                        <div class="mdc-touch-target-wrapper hidden" id="motocrazytownDownloadWrapper">
-                            <a class="mdc-button mdc-button--touch" id="motocrazytownDownload">
-                                <span class="mdc-button__ripple"></span>
-                                <span class="mdc-button__label">Download xls</span>
-                                <span class="mdc-button__touch"></span>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="mdc-data-table__row">
-                    <th class="mdc-data-table__cell" scope="row">Motodom</th>
-                    <td class="mdc-data-table__cell" id="motodomStatus"></td>
-                    <td class="mdc-data-table__cell" id="motodomStartedVal"></td>
-                    <td class="mdc-data-table__cell mdc-data-table__cell--numeric" id="motodomProcessedVal"></td>
-                    <td class="mdc-data-table__cell" id="motodomFinishedVal"></td>
-                    <td class="mdc-data-table__cell">
-                        <div class="mdc-touch-target-wrapper">
-                            <button class="mdc-button mdc-button--touch" id="motodomBtn" disabled onclick="start('motodom')">
-                                <span class="mdc-button__ripple"></span>
-                                <span class="mdc-button__label">Start scrapping</span>
-                                <span class="mdc-button__touch"></span>
-                            </button>
-                        </div>
-                        <div class="mdc-touch-target-wrapper hidden" id="motodomDownloadWrapper">
-                            <a class="mdc-button mdc-button--touch" id="motodomDownload">
+                        <div class="mdc-touch-target-wrapper hidden" id="productDownloadWrapper">
+                            <a class="mdc-button mdc-button--touch" id="productDownload">
                                 <span class="mdc-button__ripple"></span>
                                 <span class="mdc-button__label">Download xls</span>
                                 <span class="mdc-button__touch"></span>

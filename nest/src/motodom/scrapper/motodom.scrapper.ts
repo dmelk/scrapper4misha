@@ -163,7 +163,8 @@ export class MotodomScrapper implements ScrapperInterface {
             }
         );
 
-        const skus = $('font[data-ro="product_model"]');
+        const skus = $('li[class="product-model"] > span');
+
         let productSku = '';
         if (skus.length) {
             productSku = skus.html();

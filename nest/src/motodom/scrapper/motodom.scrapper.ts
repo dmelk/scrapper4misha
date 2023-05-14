@@ -172,12 +172,9 @@ export class MotodomScrapper implements ScrapperInterface {
 
         const options = $('div.product-option-radio');
         if (options.length === 0) {
-            const inStocks = $('font[data-ro="product_stock"]');
-            if (inStocks.length) {
-                const inStock = cheerioModule.text(inStocks).toLowerCase();
-                if (inStock !== 'в наличии') {
-                    return 0;
-                }
+            const inStocks = $('.product-stock.in-stock');
+            if (!inStocks.length) {
+                return 0;
             }
 
             productInfo.combinations.push([

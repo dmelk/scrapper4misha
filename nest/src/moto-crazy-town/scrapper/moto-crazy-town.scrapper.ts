@@ -13,7 +13,7 @@ import { ProductScrapper } from '../../scrapper/scrapper/product.scrapper';
 export class MotoCrazyTownScrapper implements ScrapperInterface {
   private static readonly BASE_URL = 'https://www.motocrazytown.com.ua';
 
-  private static readonly CATALOG_URL = '/catalog/';
+  private static readonly CATALOG_URL = '/catalog-ua/';
 
   private static readonly PRODUCT_VARIATION_URL =
     '/catalog/product/ajax_attrib_select_and_price/';

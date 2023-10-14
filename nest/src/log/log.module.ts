@@ -1,13 +1,8 @@
-import {Module} from '@nestjs/common';
-import {LogStore} from './store/log.store';
+import { Module } from '@nestjs/common';
+import { LogStore } from './store/log.store';
 
 @Module({
-    providers: [
-        LogStore
-    ],
-    exports: [
-        LogStore
-    ]
+  providers: [LogStore],
+  exports: [LogStore],
 })
-export class LogModule {
-}
+export class LogModule {}

@@ -1,4 +1,4 @@
 export interface ProductAttributeInterface {
-    title: string,
-    column: number,
+  title: string;
+  column: number;
 }

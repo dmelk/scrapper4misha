@@ -16,7 +16,7 @@ export class MotoCrazyTownScrapper implements ScrapperInterface {
   private static readonly CATALOG_URL = '/catalog-ua/';
 
   private static readonly PRODUCT_VARIATION_URL =
-    '/catalog/product/ajax_attrib_select_and_price/';
+    '/catalog-ua/product/ajax_attrib_select_and_price/';
 
   private static readonly PAGE_URL = '?start=';
 

@@ -1,3 +1,3 @@
-import {ProductAttributeInterface} from './product-attribute.interface';
+import { ProductAttributeInterface } from './product-attribute.interface';
 
 export type ProductAttributesMap = Map<string, ProductAttributeInterface>;

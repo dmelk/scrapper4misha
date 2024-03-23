@@ -132,7 +132,7 @@ export class MotodomScrapper implements ScrapperInterface {
       parentCategory: '',
       category: '',
       name: '',
-      amount: 1,
+      amount: [],
       priceWholesaleUsd: '0',
       priceUsd: '0',
       prices: [],
@@ -210,6 +210,8 @@ export class MotodomScrapper implements ScrapperInterface {
           value: '',
         },
       ]);
+
+      productInfo.amount.push(1);
 
       const prices = $('div.product-price');
       if (prices.length) {
@@ -331,6 +333,7 @@ export class MotodomScrapper implements ScrapperInterface {
               productInfo.combinations.push(productCombination);
 
               productInfo.skus.push(productSku);
+              productInfo.amount.push(1);
             }
           }
         }

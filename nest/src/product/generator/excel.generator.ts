@@ -3,6 +3,7 @@ import * as xl from 'excel4node';
 import { ProductInfo } from '../type/product.info';
 import { ProductSheetConfig } from '../type/product-sheet.config';
 import { ProductAttributeInfo } from '../type/product-attribute.info';
+import { isArray } from 'class-validator';
 
 @Injectable()
 export class ExcelGenerator {
@@ -75,8 +76,6 @@ export class ExcelGenerator {
   ): number {
     let added = 0;
 
-    // console.log(productInfo, productInfo.combinations);
-
     productInfo.combinations.forEach((combination, idx) => {
       combination.forEach((variantInfo) => {
         if (variantInfo.name === ProductAttributeInfo.COLOR) {
@@ -121,7 +120,7 @@ export class ExcelGenerator {
 
       productSheet
         .cell(productRow + added, ProductSheetConfig.AMOUNT)
-        .string(productInfo.amount.toFixed(0));
+        .string(productInfo.amount[idx].toFixed(0));
 
       productSheet
         .cell(productRow + added, ProductSheetConfig.PRICE_WHOLESALE_USD)

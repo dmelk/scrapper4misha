@@ -5,6 +5,7 @@ import { MotodomScrapper } from '../../motodom/scrapper/motodom.scrapper';
 import { DinamotoScrapper } from '../../dinamoto/scrapper/dinamoto.scrapper';
 import { ExcelGenerator } from '../../product/generator/excel.generator';
 import { MotoCrazyTownScrapper } from '../../moto-crazy-town/scrapper/moto-crazy-town.scrapper';
+import { RsvmotoScrapper } from '../../rsvmoto/scrapper/rsvmoto.scrapper';
 
 @Injectable()
 export class ProductScrapper {
@@ -16,6 +17,7 @@ export class ProductScrapper {
     private readonly dinamotoScrapper: DinamotoScrapper,
     private readonly motodomScrapper: MotodomScrapper,
     private readonly motoCrazyTownScrapper: MotoCrazyTownScrapper,
+    private readonly rsvmotoScrapper: RsvmotoScrapper,
   ) {}
 
   public async startScrapping(): Promise<string> {
@@ -42,7 +44,11 @@ export class ProductScrapper {
       productRow,
       productSheet,
     );
-    await this.motoCrazyTownScrapper.startScrapping(productRow, productSheet);
+    productRow = await this.motoCrazyTownScrapper.startScrapping(
+      productRow,
+      productSheet,
+    );
+    await this.rsvmotoScrapper.startScrapping(productRow, productSheet);
 
     const xlsName = this.excelGenerator.saveWorkbook(
       workbook,

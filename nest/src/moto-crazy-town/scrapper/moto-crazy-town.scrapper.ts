@@ -140,7 +140,7 @@ export class MotoCrazyTownScrapper implements ScrapperInterface {
       parentCategory: '',
       category: '',
       name: '',
-      amount: 1,
+      amount: [],
       priceWholesaleUsd: '0',
       priceUsd: '0',
       prices: [],
@@ -225,6 +225,8 @@ export class MotoCrazyTownScrapper implements ScrapperInterface {
         },
       ]);
 
+      productInfo.amount.push(1);
+
       const prices = $('#block_price');
       if (prices.length) {
         productInfo.prices.push(
@@ -274,6 +276,8 @@ export class MotoCrazyTownScrapper implements ScrapperInterface {
             value: variantName,
           },
         ]);
+
+        productInfo.amount.push(1);
       }
     }
 

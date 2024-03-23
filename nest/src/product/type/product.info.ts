@@ -6,7 +6,7 @@ export interface ProductInfo {
   parentCategory: string;
   category: string;
   name: string;
-  amount: number;
+  amount: number[];
   priceWholesaleUsd: string;
   priceUsd: string;
   prices: number[];

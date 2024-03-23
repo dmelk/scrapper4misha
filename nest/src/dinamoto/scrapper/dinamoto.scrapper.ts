@@ -155,7 +155,7 @@ export class DinamotoScrapper implements ScrapperInterface {
       parentCategory: parentCategory,
       category: category,
       name: '',
-      amount: 1,
+      amount: [],
       priceWholesaleUsd: '0',
       priceUsd: '0',
       prices: [],
@@ -254,6 +254,7 @@ export class DinamotoScrapper implements ScrapperInterface {
     for (let i = 0; i < productInfo.combinations.length; i++) {
       productInfo.prices.push(productPrice);
       productInfo.skus.push(productSku);
+      productInfo.amount.push(1);
     }
 
     $(

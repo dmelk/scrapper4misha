@@ -8,6 +8,7 @@ import { ProductScrapper } from './scrapper/product.scrapper';
 import { MotodomModule } from '../motodom/motodom.module';
 import { DinamotoModule } from '../dinamoto/dinamoto.module';
 import { MotoCrazyTownModule } from '../moto-crazy-town/moto-crazy-town.module';
+import { RsvmotoModule } from '../rsvmoto/rsvmoto.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { MotoCrazyTownModule } from '../moto-crazy-town/moto-crazy-town.module';
     MotodomModule,
     DinamotoModule,
     MotoCrazyTownModule,
+    RsvmotoModule,
   ],
   controllers: [ProductController],
   providers: [ProductScheduler, ProductScrapper],

@@ -95,7 +95,6 @@ export class RsvmotoScrapper implements ScrapperInterface {
     productSheet,
   ): Promise<number> {
     const url = RsvmotoScrapper.BASE_URL.concat(productUrl);
-    console.log(url);
     try {
       const response = await got(url),
         $ = cheerioModule.load(response.body);
